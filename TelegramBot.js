@@ -1,6 +1,7 @@
 /*
 Copyright (c)2018 by vinhjaxt
 */
+'use strict';
 
 const request = require('request');
 
