@@ -1,0 +1,19 @@
+{
+  "name": "node_telegram_bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "TelegramBot.js",
+  "scripts": {
+    "test": "node test.js",
+    "start": "node test.js"
+  },
+  "keywords": [
+    "nodejs",
+    "telegram"
+  ],
+  "author": "Vinhjaxt",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.85.0"
+  }
+}
