@@ -1,7 +1,6 @@
 /*
 Copyright (c)2018 by vinhjaxt
 */
-'use strict';
 
 const request = require('request');
 
@@ -40,6 +39,14 @@ const telegramBotInstance = function (){
     if(self.availableMethods['sendMessage'])
       self.availableMethods.sendMessage.apply(null, arguments);
   };
+  // for Long-Polling
+  self.getUpdates = function (){
+    if(self.availableMethods['getUpdates']){
+      self.availableMethods.getUpdates.apply(null, arguments);
+      return;
+    }
+    setTimeout(() => self.getUpdates.apply(null, arguments), 2000);
+  };
   self.sendPhoto = function (){
     if(self.availableMethods['sendPhoto'])
       self.availableMethods.sendPhoto.apply(null, arguments);
@@ -55,10 +62,14 @@ const telegramBotInstance = function (){
         url: getTelegramApiUrl('getMe'),
         gzip: true,
         json: true,
-        timeout: 10000
+        timeout: 15000
       },  (e,r,b) => {
         if(e){
           console.error('getMe: ', e);
+          if(!b)
+          setTimeout(() => {
+            self.setBotToken(token);
+          }, 2000);
           return;
         }
         try{
@@ -78,10 +89,14 @@ const telegramBotInstance = function (){
                 method: 'POST',
                 json: data,
                 gzip: true,
-                timeout: 10000
+                timeout: 15000
               }, (e,r,b) => {
                 if (e || r.statusCode != 200) {
-                  console.error('sendMessage(',message,chat_id,') : '+e,b);
+                  console.error('sendMessage(', message, chat_id, ') : ', e, b);
+                  if(!b)
+                  setTimeout(() => {
+                    self.sendMessage(message, chat_id);
+                  }, 3000);
                   return;
                 }
                 if(!b.result || !b.result.message_id){
@@ -95,15 +110,16 @@ const telegramBotInstance = function (){
                 }
               });
             }catch(e){
-              console.error('sendMessage: ',e);
+              console.error('sendMessage: ', e);
             }
           }; // sendMessage
           
           self.availableMethods['sendPhoto'] = (file, caption, chat_id) => {
             try{
+              const fs = require('fs');
               const data = {
                 chat_id: channelIDs[chat_id]||chat_id,
-                parse_mode: 'HTML',
+                parse_mode: 'HTML', // Markdown
                 photo: fs.createReadStream(file),
                 caption: caption
               }
@@ -116,7 +132,7 @@ const telegramBotInstance = function (){
                 timeout: 20000
               }, (e,r,b) => {
                 if (e || r.statusCode != 200) {
-                  console.error('sendPhoto: '+e, b);
+                  console.error('sendPhoto(', file, chat_id, '): ', e, b);
                   return;
                 }
                 if(!b.result || !b.result.message_id){
@@ -144,7 +160,7 @@ const telegramBotInstance = function (){
               },
               json: true,
               gzip: true,
-              timeout: 5000
+              timeout: 15000
             }, (e, r, b) => {
               if(e){
                 console.error(e);
@@ -153,6 +169,18 @@ const telegramBotInstance = function (){
               console.log('setWebhook: ', b);
             });
           }; // setWebhook
+
+          // telegram getUpdates for long-polling
+          self.availableMethods['getUpdates'] = (qs, cb) => {
+            request({
+              url: getTelegramApiUrl('getUpdates'),
+              method: 'GET',
+              qs: qs,
+              json: true,
+              gzip: true,
+              timeout: 15000
+            }, cb);
+          }; // getUpdates
         }catch(e){
           console.error(e);
           return;
