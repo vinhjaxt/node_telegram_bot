@@ -38,6 +38,9 @@ const telegramBotInstance = function (){
   self.sendMessage = function (){
     if(self.availableMethods['sendMessage'])
       self.availableMethods.sendMessage.apply(null, arguments);
+    if(typeof(arguments[arguments.length - 1]) === 'function'){
+      (arguments[arguments.length - 1])('Not available yet');
+    }
   };
   // for Long-Polling
   self.getUpdates = function (){
@@ -45,17 +48,26 @@ const telegramBotInstance = function (){
       self.availableMethods.getUpdates.apply(null, arguments);
       return;
     }
-    setTimeout(() => self.getUpdates.apply(null, arguments), 2000);
+    if(typeof(arguments[arguments.length - 1]) === 'function'){
+      (arguments[arguments.length - 1])('Not available yet');
+    }else
+      setTimeout(() => self.getUpdates.apply(null, arguments), 2000);
   };
   self.sendPhoto = function (){
     if(self.availableMethods['sendPhoto'])
       self.availableMethods.sendPhoto.apply(null, arguments);
+    if(typeof(arguments[arguments.length - 1]) === 'function'){
+      (arguments[arguments.length - 1])('Not available yet');
+    }
   };
   self.setWebhook = function (){
     if(self.availableMethods['setWebhook'])
       self.availableMethods.setWebhook.apply(null, arguments);
+    if(typeof(arguments[arguments.length - 1]) === 'function'){
+      (arguments[arguments.length - 1])('Not available yet');
+    }
   };
-  self.setBotToken = (token) => {
+  self.setBotToken = (token, cb) => {
     self.TELEGRAM_BOT_TOKEN = token;
     self.availableMethods = {};
     request({
@@ -66,18 +78,23 @@ const telegramBotInstance = function (){
       },  (e,r,b) => {
         if(e){
           console.error('getMe: ', e);
-          if(!b)
-          setTimeout(() => {
-            self.setBotToken(token);
-          }, 2000);
+          if(b){
+            if(cb)
+              cb(b);
+          }else
+            setTimeout(() => {
+              self.setBotToken(token);
+            }, 2000);
           return;
         }
         try{
           if(!b.ok && b.error_code == 401){
             console.error('TELEGRAM_BOT_TOKEN is invalid: ', b);
+            if(cb) cb(b);
             return;
           }
-          self.availableMethods['sendMessage'] = (message, chat_id) => {
+          if(cb) cb(false, b);
+          self.availableMethods['sendMessage'] = (message, chat_id, cb) => {
             try{
               const data = {
                 chat_id: channelIDs[chat_id]||chat_id,
@@ -93,14 +110,19 @@ const telegramBotInstance = function (){
               }, (e,r,b) => {
                 if (e || r.statusCode != 200) {
                   console.error('sendMessage(', message, chat_id, ') : ', e, b);
-                  if(!b)
-                  setTimeout(() => {
-                    self.sendMessage(message, chat_id);
-                  }, 3000);
+                  if(b){
+                    if(cb)
+                      cb(b);
+                  }else
+                    setTimeout(() => {
+                      self.sendMessage(message, chat_id);
+                    }, 3000);
                   return;
                 }
                 if(!b.result || !b.result.message_id){
                   console.log('sendMessage: May be TELEGRAM_BOT_TOKEN was expired.');
+                  if(cb)
+                    cb(b);
                   return;
                 }
                 // Success
@@ -108,13 +130,14 @@ const telegramBotInstance = function (){
                   channelIDs[chat_id] = b.result.chat.id;
                   doSaveChannel = true;
                 }
+                if(cb) cb(false, b);
               });
             }catch(e){
               console.error('sendMessage: ', e);
             }
           }; // sendMessage
           
-          self.availableMethods['sendPhoto'] = (file, caption, chat_id) => {
+          self.availableMethods['sendPhoto'] = (file, caption, chat_id, cb) => {
             try{
               const fs = require('fs');
               const data = {
@@ -133,10 +156,14 @@ const telegramBotInstance = function (){
               }, (e,r,b) => {
                 if (e || r.statusCode != 200) {
                   console.error('sendPhoto(', file, chat_id, '): ', e, b);
+                  if(cb)
+                    cb(b||e);
                   return;
                 }
                 if(!b.result || !b.result.message_id){
                   console.error('sendPhoto: May be TELEGRAM_BOT_TOKEN was expired.');
+                  if(cb)
+                    cb(b);
                   return;
                 }
                 // Success
@@ -144,6 +171,8 @@ const telegramBotInstance = function (){
                   channelIDs[chat_id] = b.result.chat.id;
                   doSaveChannel = true;
                 }
+                if(cb)
+                  cb(false, b);
               });
             }catch(e){
               console.error('sendPhoto: ', e);
@@ -164,9 +193,13 @@ const telegramBotInstance = function (){
             }, (e, r, b) => {
               if(e){
                 console.error(e);
+                if(cb)
+                  cb(b||e);
                 return;
               }
               console.log('setWebhook: ', b);
+              if(cb)
+                cb(false, b);
             });
           }; // setWebhook
 
