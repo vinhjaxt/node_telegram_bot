@@ -1,8 +1,8 @@
-@vinhjaxt Nodejs and Telegram BOT API
+# @vinhjaxt Nodejs and Telegram BOT API
 
-*Install:  `npm i -S vinhjaxt/node_telegram_bot`
+# Install:  `npm i -S vinhjaxt/node_telegram_bot`
 
-*Usage:
+# Usage:
 ```
 const TelegramBot = require('./TelegramBot')('_YOUR_TELEGRAM_BOT_TOKEN_');
 
@@ -23,4 +23,4 @@ setTimeout(() => {
 ```
 
 if you want more:
-#Happy hacking
+# Happy hacking
