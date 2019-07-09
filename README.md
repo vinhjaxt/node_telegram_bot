@@ -3,24 +3,15 @@
 # Install:  `npm i -S vinhjaxt/node_telegram_bot`
 
 # Usage:
+```js
+const TelegramBot = require('./TelegramBot')
+
+const myBot = new TelegramBot({
+  token: '536034356:xxx'
+})
+
+myBot.getMePromise.then(() => {
+  console.log('Bot is ready')
+  myBot.sendMessage('Hello', '@vinhjaxt_ch').catch(console.error.bind(console))
+}).catch(console.error.bind(console))
 ```
-const TelegramBot = require('./TelegramBot')('_YOUR_TELEGRAM_BOT_TOKEN_');
-
-setTimeout(() => {
-  TelegramBot.sendMessage('Hello from Node', '@your_channel');
-}, 3000);
-
-
-// Or:
-
-const TelegramBotInstance = require('./TelegramBot');
-const myBot = new TelegramBotInstance('MY_TELEGRAM_BOT_TOKEN');
-
-setTimeout(() => {
-  myBot.sendMessage('Hello from another bot hihi', '@your_channel');
-}, 4000);
-
-```
-
-if you want more:
-# Happy hacking
