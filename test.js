@@ -1,15 +1,10 @@
-const TelegramBot = require('./TelegramBot')('_YOUR_TELEGRAM_BOT_TOKEN_');
+const TelegramBot = require('./TelegramBot')
 
-setTimeout(() => {
-  TelegramBot.sendMessage('Hello from Node', '@your_channel');
-}, 3000);
+const myBot = new TelegramBot({
+  token: '536034356:AAEZnLWWg4g9KoZ4ihIDkroxOdeEYzGQXoU'
+})
 
-
-// Or:
-
-const TelegramBotInstance = require('./TelegramBot');
-const myBot = new TelegramBotInstance('MY_TELEGRAM_BOT_TOKEN');
-
-setTimeout(() => {
-  myBot.sendMessage('Hello from another bot hihi', '@your_channel');
-}, 4000);
+myBot.getMePromise.then(() => {
+  console.log('Bot is ready')
+  myBot.sendMessage('Hello', '@vinhjaxt_ch').catch(console.error.bind(console))
+}).catch(console.error.bind(console))
