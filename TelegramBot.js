@@ -58,6 +58,7 @@ class TelegramBot {
     } else {
       this.cachedChatIds = {}
     }
+    this.request = request
     this.getMePromise = request({
       url: this.getTelegramApiUrl('getMe')
     }).then(b => {
