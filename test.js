@@ -6,5 +6,7 @@ const myBot = new TelegramBot({
 
 myBot.getMePromise.then(() => {
   console.log('Bot is ready')
-  myBot.sendMessage('Hello', '@vinhjaxt_ch').catch(console.error.bind(console))
+  myBot.sendMessage('Hello', '@vinhjaxt_gr').then(b => {
+    console.log(b, myBot.cachedChatIds)
+  }).catch(console.error.bind(console))
 }).catch(console.error.bind(console))

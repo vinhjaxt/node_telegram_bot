@@ -10,21 +10,21 @@ const defaultOpts = {
   timeout: 7000,
   json: true
 }
-const NormalizeOptions = opts => {
-  opts = Object.assign({}, defaultOpts, opts)
-  return opts
-}
+const NormalizeOptions = opts => Object.assign({}, defaultOpts, opts)
 const requestBase = (opts) => new Promise((resolve, reject) => Request(NormalizeOptions(opts), (e, r, b) => e ? reject(e) : resolve([r, b])))
+const checkErrError = new Error('checkErr')
+const maxRetryError = new Error('maxRetryError')
 const request = async (opts, callback, checkErr) => {
   let err, resp, body
-  if (!checkErr) checkErr = () => false
   let retry = 0
-  do {
-    if (retry > 9) {
-      console.error('Telegram: Request max retry exceeded')
+  const maxRetries = opts.maxRetries || 9
+  while (true) {
+    if (retry > maxRetries) {
+      console.error('TelegramBot: Request max retry exceeded')
+      if (!err) err = maxRetryError
       break
     }
-    if (retry) console.log('Telegram: Retry:', retry)
+    if (retry) console.log('TelegramBot: Retry', retry)
     retry++
     try {
       [resp, body] = await requestBase(opts)
@@ -32,7 +32,12 @@ const request = async (opts, callback, checkErr) => {
       err = e
       continue
     }
-  } while (await checkErr(resp, body))
+    if (checkErr && (await checkErr(resp, body))) {
+      if (!err) err = checkErrError
+      continue
+    }
+    break
+  }
   if (callback && callback.constructor === Function) callback(err, resp, body)
   if (err) throw err
   return body
@@ -43,7 +48,16 @@ const getTelegramApiUrl = (botToken, method) => 'https://api.telegram.org/bot' +
 class TelegramBot {
   constructor (config) {
     this.config = config
-    this.cachedChatIds = {}
+    if (this.config.cachedChatIdsFile && fs.existsSync(this.config.cachedChatIdsFile)) {
+      try {
+        this.cachedChatIds = JSON.parse(fs.readFileSync(this.config.cachedChatIdsFile, 'utf8'))
+        if (typeof this.cachedChatIds !== 'object' || Array.isArray(this.cachedChatIds)) this.cachedChatIds = {}
+      } catch (e) {
+        this.cachedChatIds = {}
+      }
+    } else {
+      this.cachedChatIds = {}
+    }
     this.getMePromise = request({
       url: this.getTelegramApiUrl('getMe')
     }).then(b => {
