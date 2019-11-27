@@ -86,14 +86,14 @@ class TelegramBot {
   // methods
 
   // send text message
-  sendMessage (text, chatId) {
+  sendMessage (text, chatId, parseMode) {
     return request({
       url: this.getTelegramApiUrl('sendMessage'),
       method: 'POST',
       json: {
         chat_id: this.getCachedChatId(chatId),
         text: text,
-        parse_mode: 'HTML'
+        parse_mode: parseMode || 'HTML'
       }
     }, null, r => r.statusCode != 200).then(b => {
       if (!b.result || !b.result.message_id) {
