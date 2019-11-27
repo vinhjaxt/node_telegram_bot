@@ -58,7 +58,7 @@ class TelegramBot {
     } else {
       this.cachedChatIds = {}
     }
-    this.request = request
+    this.request = config.request || request
     this.getMePromise = request({
       url: this.getTelegramApiUrl('getMe')
     }).then(b => {
@@ -68,15 +68,18 @@ class TelegramBot {
       return b
     })
   }
+
   cacheChatId (chatId, realChatId) {
     if (this.cachedChatIds[chatId] === realChatId) return
     this.cachedChatIds[chatId] = realChatId
     if (!this.config.cachedChatIdsFile) return
     fs.writeFileSync(this.config.cachedChatIdsFile, JSON.stringify(this.cachedChatIds), 'utf8')
   }
+
   getCachedChatId (chatId) {
     return this.cachedChatIds[chatId] || chatId
   }
+
   getTelegramApiUrl (method) {
     return getTelegramApiUrl(this.config.token, method)
   }
@@ -102,13 +105,16 @@ class TelegramBot {
       return b
     })
   }
+
   // telegram getUpdates for long-polling
-  getUpdates (query) {
+  getUpdates (query, opts) {
     return request({
+      ...opts,
       url: this.getTelegramApiUrl('getUpdates'),
       qs: query
     })
   }
+
   // telegram web hook for bot
   setWebhook (url) {
     return request({
@@ -118,6 +124,7 @@ class TelegramBot {
       }
     })
   }
+
   sendPhoto (file, caption, chatId) {
     return request({
       url: this.getTelegramApiUrl('sendPhoto'),
@@ -140,4 +147,4 @@ class TelegramBot {
   }
 }
 
-exports = module.exports = TelegramBot
+exports = module.exports = { TelegramBot, defaultOpts }

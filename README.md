@@ -1,10 +1,13 @@
-# @vinhjaxt Nodejs and Telegram BOT API
+# Nodejs and Telegram BOT API
 
-# Install:  `npm i -S vinhjaxt/node_telegram_bot`
+## Install:
+`npm i -S vinhjaxt/node_telegram_bot`
+or
+`yarn add vinhjaxt/node_telegram_bot`
 
-# Usage:
+## Usage:
 ```js
-const TelegramBot = require('node_telegram_bot')
+const { TelegramBot } = require('node_telegram_bot')
 
 const myBot = new TelegramBot({
   token: '536034356:xxx' // Your bot token
