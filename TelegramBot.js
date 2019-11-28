@@ -106,6 +106,28 @@ class TelegramBot {
     })
   }
 
+  // send text message
+  editMessageText (text, messageId, chatId, parseMode) {
+    return request({
+      url: this.getTelegramApiUrl('editMessageText'),
+      method: 'POST',
+      json: {
+        message_id: messageId,
+        chat_id: this.getCachedChatId(chatId),
+        text: text,
+        parse_mode: parseMode || 'HTML'
+      }
+    }, null, r => r.statusCode != 200).then(b => {
+      if (!b.result) {
+        const err = new Error('sendMessage: May be TELEGRAM_BOT_TOKEN expired')
+        err.body = b
+        throw err
+      }
+      this.cacheChatId(chatId, b.result.chat.id)
+      return b
+    })
+  }
+
   // telegram getUpdates for long-polling
   getUpdates (query, opts) {
     return request({
