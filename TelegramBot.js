@@ -12,7 +12,6 @@ const defaultOpts = {
 }
 const NormalizeOptions = opts => Object.assign({}, defaultOpts, opts)
 const requestBase = (opts) => new Promise((resolve, reject) => Request(NormalizeOptions(opts), (e, r, b) => e ? reject(e) : resolve([r, b])))
-const checkErrError = new Error('checkErr')
 const maxRetryError = new Error('maxRetryError')
 const request = async (opts, callback, checkErr) => {
   let err, resp, body
@@ -33,7 +32,11 @@ const request = async (opts, callback, checkErr) => {
       continue
     }
     if (checkErr && (await checkErr(resp, body))) {
-      if (!err) err = checkErrError
+      if (!err) {
+        err = new Error('Check error')
+        err.resp = resp.headers
+        err.body = body
+      }
       continue
     }
     break
